@@ -9,80 +9,70 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
-    @Environment(\.managedObjectContext) private var viewContext
+    init() {
+        UITabBar.appearance().backgroundColor = UIColor(Color("Background"))
 
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
-
+    }
+    let cryptoList = ["Bitcoin", "Ethereum", "Tether", "USD Coin", "BNB"]
     var body: some View {
-        NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
+        Color("Background").ignoresSafeArea(.all)
+        .overlay(
+            VStack {
+                Image("logo").resizable()
+                    .aspectRatio(contentMode: .fit)
+            Rectangle()
+            .frame(width: UIScreen.screenWidth - 7, height: UIScreen.screenHeight - 320, alignment: .center)
+            .foregroundColor(.gray)
+            .overlay(
+                Rectangle()
+                .frame(width: UIScreen.screenWidth - 15, height: UIScreen.screenHeight - 330, alignment: .center)
+                .foregroundColor(.gray)
+                .border(.white, width:6))
+                .overlay(
+                    Rectangle().frame(width: UIScreen.screenWidth - 31, height: UIScreen.screenHeight - 350, alignment: .top)
+                    .foregroundColor(.gray).border(.white, width:6))
+                    .overlay(
+                    ScrollView {
+                        VStack (alignment: .leading) {
+                            Spacer()
+                            Spacer()
+                            Spacer()
+                            Spacer()
+                            Text("Cryptocurrencies")
+                                .font(Font.custom("JetBrainsMono-Bold", size:20))
+                                .frame(width: UIScreen.screenWidth - 77, alignment: .topLeading)
+                            ForEach(0 ..< cryptoList.count, id: \.self) {
+                                Text(self.cryptoList[$0])
+                                    .font(Font.custom("JetBrainsMonoNL-Regular", size:15))
+                                    .frame(width: UIScreen.screenWidth - 77, alignment: .topLeading)
+                            }
+                        }
                     }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                )
+                TabView() {
+                    Text("").font(Font.custom("JetBrainsMonoNL-Regular", size: 10)).tabItem {
+                        Text("Crypto").font(Font.custom("JetBrainsMonoNL-Regular", size: 25))
                     }
-                }
+                    Text("").font(Font.custom("JetBrainsMonoNL-Regular", size: 10)).tabItem {
+                        Text("Stocks").font(Font.custom("JetBrainsMonoNL-Regular", size: 25))
+                    }
+                    Text("").font(Font.custom("JetBrainsMonoNL-Regular", size: 10)).tabItem {
+                        Text("About").font(Font.custom("JetBrainsMonoNL-Regular", size: 25))
+                    }
+                }.frame(width: UIScreen.screenWidth, height:40, alignment: .bottom)
             }
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
-        }
+        )
     }
 }
-
-private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
-    return formatter
-}()
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
     }
+}
+
+extension UIScreen{
+   static let screenWidth = UIScreen.main.bounds.size.width
+   static let screenHeight = UIScreen.main.bounds.size.height
+   static let screenSize = UIScreen.main.bounds.size
 }
