@@ -7,15 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8531F47D28A0D75D009F4F17 /* JetBrainsMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8531F47C28A0D75D009F4F17 /* JetBrainsMono-Bold.ttf */; };
 		857A205028A08412001912CA /* meshApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857A204F28A08412001912CA /* meshApp.swift */; };
 		857A205228A08412001912CA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857A205128A08412001912CA /* ContentView.swift */; };
 		857A205428A08412001912CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 857A205328A08412001912CA /* Assets.xcassets */; };
 		857A205728A08412001912CA /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 857A205628A08412001912CA /* Preview Assets.xcassets */; };
 		857A205928A08412001912CA /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857A205828A08412001912CA /* Persistence.swift */; };
 		857A205C28A08412001912CA /* mesh.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 857A205A28A08412001912CA /* mesh.xcdatamodeld */; };
+		857A207028A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 857A206F28A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8531F47C28A0D75D009F4F17 /* JetBrainsMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JetBrainsMono-Bold.ttf"; sourceTree = "<group>"; };
 		857A204C28A08412001912CA /* mesh.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mesh.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		857A204F28A08412001912CA /* meshApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = meshApp.swift; sourceTree = "<group>"; };
 		857A205128A08412001912CA /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -23,6 +26,7 @@
 		857A205628A08412001912CA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		857A205828A08412001912CA /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
 		857A205B28A08412001912CA /* mesh.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = mesh.xcdatamodel; sourceTree = "<group>"; };
+		857A206F28A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JetBrainsMonoNL-Regular.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +60,8 @@
 			isa = PBXGroup;
 			children = (
 				857A204F28A08412001912CA /* meshApp.swift */,
+				857A206F28A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf */,
+				8531F47C28A0D75D009F4F17 /* JetBrainsMono-Bold.ttf */,
 				857A205128A08412001912CA /* ContentView.swift */,
 				857A205328A08412001912CA /* Assets.xcassets */,
 				857A205828A08412001912CA /* Persistence.swift */,
@@ -133,6 +139,8 @@
 			files = (
 				857A205728A08412001912CA /* Preview Assets.xcassets in Resources */,
 				857A205428A08412001912CA /* Assets.xcassets in Resources */,
+				857A207028A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf in Resources */,
+				8531F47D28A0D75D009F4F17 /* JetBrainsMono-Bold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,11 +286,13 @@
 				DEVELOPMENT_TEAM = S3FH967GMD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = mesh/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -292,7 +302,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -307,11 +317,13 @@
 				DEVELOPMENT_TEAM = S3FH967GMD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = mesh/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -321,7 +333,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
