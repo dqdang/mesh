@@ -16,8 +16,7 @@ struct ContentView: View {
 
     init() {
         UITabBar.appearance().backgroundColor = UIColor(Color("Background"))
-        UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.init(name: fontRegular, size: 20)! ], for: .normal)
-
+        UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.init(name: fontRegular, size: 21)! ], for: .normal)
     }
 
     var body: some View {
