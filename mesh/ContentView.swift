@@ -27,28 +27,27 @@ struct ContentView: View {
                 Rectangle()
                 .frame(width: UIScreen.screenWidth - 15, height: UIScreen.screenHeight - 330, alignment: .center)
                 .foregroundColor(.gray)
-                .border(.white, width:6))
+                .border(.white, width:6)
                 .overlay(
-                    Rectangle().frame(width: UIScreen.screenWidth - 31, height: UIScreen.screenHeight - 350, alignment: .top)
-                    .foregroundColor(.gray).border(.white, width:6))
+                    Rectangle().frame(width: UIScreen.screenWidth - 31, height: UIScreen.screenHeight - 350, alignment: .center)
+                    .foregroundColor(.gray).border(.white, width:6)
                     .overlay(
-                    ScrollView {
-                        VStack (alignment: .leading) {
-                            Spacer()
-                            Spacer()
-                            Spacer()
-                            Spacer()
-                            Text("Cryptocurrencies")
-                                .font(Font.custom("JetBrainsMono-Bold", size:20))
-                                .frame(width: UIScreen.screenWidth - 77, alignment: .topLeading)
-                            ForEach(0 ..< cryptoList.count, id: \.self) {
-                                Text(self.cryptoList[$0])
-                                    .font(Font.custom("JetBrainsMonoNL-Regular", size:15))
+                        Rectangle().frame(width: UIScreen.screenWidth - 50, height: UIScreen.screenHeight - 380, alignment: .center)
+                        .foregroundColor(.gray)
+                        .overlay(
+                        ScrollView {
+                            VStack (alignment: .leading) {
+                                Text("Cryptocurrencies")
+                                    .font(Font.custom("JetBrainsMono-Bold", size:20))
                                     .frame(width: UIScreen.screenWidth - 77, alignment: .topLeading)
+                                ForEach(0 ..< cryptoList.count, id: \.self) {
+                                    Text(self.cryptoList[$0])
+                                        .font(Font.custom("JetBrainsMonoNL-Regular", size:15))
+                                        .frame(width: UIScreen.screenWidth - 77, alignment: .topLeading)
+                                }
                             }
                         }
-                    }
-                )
+                ))))
                 TabView() {
                     Text("").font(Font.custom("JetBrainsMonoNL-Regular", size: 10)).tabItem {
                         Text("Crypto").font(Font.custom("JetBrainsMonoNL-Regular", size: 25))
@@ -60,6 +59,7 @@ struct ContentView: View {
                         Text("About").font(Font.custom("JetBrainsMonoNL-Regular", size: 25))
                     }
                 }.frame(width: UIScreen.screenWidth, height:40, alignment: .bottom)
+                    .accentColor(Color("Selected"))
             }
         )
     }
