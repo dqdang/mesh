@@ -13,6 +13,8 @@ struct ContentView: View {
     let fontBold = "JetBrainsMono-Bold"
     let cryptoList = ["Bitcoin", "Ethereum", "Tether", "USD Coin", "BNB", "XRP", "Cardano", "Binance USD", "Solana", "Polkadot", "Dogecoin", "Avalanche", "Dai", "Polygon", "Shiba Inu", "Uniswap", "TRON", "Wrapped Bitcoin", "Ethereum Classic", "UNUS SED LEO", "Litecoin", "FTX Token", "NEAR Protocol", "Chainlink", "Cronos", "Cosmos", "Stellar", "Flow", "Monero", "Bitcoin Cash", "Algorand"]
     let pricesList = ["23,797.81", "1,772.39", "1.00", "0.99", "324.27", "0.37", "0.53", "1.00", "42.42", "9.152", "0.07305", "28.38", "0.9994", "0.9232", "0.000001", "8.741", "0.0707", "23,853.45", "37.78", "4.778", "62.45", "31.44", "5.407", "8.596", "0.1520", "11.75", "0.1271", "3.022", "167.11", "143.24", "0.3659"]
+    @State var sizeOfText: CGSize = .zero
+    @State var fontSizeOfText: CGFloat = 20.0
 
     init() {
         UITabBar.appearance().backgroundColor = UIColor(Color("Background"))
@@ -42,15 +44,25 @@ struct ContentView: View {
                         .overlay(
                             ScrollView(.vertical, showsIndicators: false) {
                             VStack (alignment: .leading) {
-                                let whiteSpaces = whiteSpaceGenerator(left: "Cryptocurrencies", right: "$", border: 26)
-                                Text("Cryptocurrencies \(whiteSpaces) $")
+                                HStack() {
+                                Text("Crypto")
+                                        .font(Font.custom(fontBold, size:20))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                Text("$")
                                     .font(Font.custom(fontBold, size:20))
-                                    .frame(width: UIScreen.screenWidth - 77, alignment: .topLeading)
-                                ForEach(0 ..< cryptoList.count, id: \.self) {
-                                    let whiteSpaces = whiteSpaceGenerator(left: cryptoList[$0], right: pricesList[$0], border: 36)
-                                    Text("\(cryptoList[$0]) \(whiteSpaces) \(pricesList[$0])")
-                                        .font(Font.custom(fontRegular, size:15))
-                                        .frame(width: UIScreen.screenWidth - 77, alignment: .topLeading)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                                }
+                                ForEach(0 ..< cryptoList.count, id: \.self) { i in
+                                    let crypto = cryptoList[i]
+                                    let price = pricesList[i]
+                                    HStack {
+                                        Text("\(crypto)")
+                                            .font(Font.custom(fontRegular, size:15))
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        Text("\(price)")
+                                            .font(Font.custom(fontRegular, size:15))
+                                            .frame(maxWidth: .infinity, alignment: .trailing)
+                                    }
                                 }
                             }
                         }
@@ -58,9 +70,6 @@ struct ContentView: View {
                 TabView() {
                     Text("").tabItem {
                         Text("Crypto")
-                    }
-                    Text("").tabItem {
-                        Text("Stocks")
                     }
                     Text("").tabItem {
                         Text("About")
@@ -93,4 +102,18 @@ func whiteSpaceGenerator(left: String, right: String, border: Int) -> String {
         whiteSpaces += " "
     }
     return whiteSpaces
+}
+
+struct sizeOfView: View {
+    @Binding var fontSizeOfText: CGFloat
+    @Binding var sizeOfText: CGSize
+
+    var body: some View {
+        GeometryReader { proxy in
+
+            HStack {}
+                .onAppear { sizeOfText = proxy.size }
+                .onChange(of: fontSizeOfText) { _ in sizeOfText = proxy.size }
+        }
+    }
 }
