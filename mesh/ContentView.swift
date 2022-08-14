@@ -5,8 +5,8 @@
 //  Created by Derek Dang on 8/7/22.
 //
 
-import CoreData
 import Combine
+import CoreData
 import Foundation
 import SwiftUI
 
@@ -31,9 +31,8 @@ struct ContentView: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(width: UIScreen.screenWidth - 30, alignment: .center)
                         .shadow(color: .black, radius: 2, x: 4, y: 4)
-                    
                     Rectangle()
-                        .frame(width: UIScreen.screenWidth - 30, height: UIScreen.screenHeight - 340, alignment: .center)
+                        .frame(width: UIScreen.screenWidth - 30, height: UIScreen.screenHeight - 350, alignment: .center)
                         .foregroundColor(Color("FrameBackground"))
                         .shadow(color: .black, radius: 1, x: 2, y: 2)
                         .overlay(
@@ -66,8 +65,6 @@ struct ContentView: View {
                                                                     ForEach(0 ..< cryptoArray.count, id: \.self) { i in
                                                                         let crypto = cryptoArray[i][0]
                                                                         let price = cryptoArray[i][1]
-                                                                        //                                                                        let crypto = "test"
-                                                                        //                                                                        let price = "test"
                                                                         HStack {
                                                                             Text("\(crypto)")
                                                                                 .font(Font.custom(fontRegular, size:15))
@@ -274,7 +271,7 @@ class CryptoMarketTicker: ObservableObject {
             guard let json = try? JSONSerialization.jsonObject(with: content, options: []) else { return }
             let jsonobj = json as! [[String:Any]]
             DispatchQueue.main.async {
-                for i in 0..<jsonobj[0].count {
+                for i in 0..<jsonobj.count {
                     let cryptoName = String(describing: jsonobj[i]["name"]!)
                     let longPrice = String(describing: jsonobj[i]["current_price"]!)
                     var currentPrice = longPrice
@@ -289,10 +286,9 @@ class CryptoMarketTicker: ObservableObject {
                         }
                         self.mapOfCrypto[cryptoName] = currentPrice
                     }
-                    
                 }
+                
                 self.cryptocurrencies.removeAll()
-                print(self.mapOfCrypto)
                 for i in 0..<self.orderBasedOnMarketCap.count {
                     let name = self.orderBasedOnMarketCap[i]
                     let price = self.mapOfCrypto[self.orderBasedOnMarketCap[i]]!
