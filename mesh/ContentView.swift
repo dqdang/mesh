@@ -5,16 +5,19 @@
 //  Created by Derek Dang on 8/7/22.
 //
 
-import SwiftUI
 import CoreData
+import Combine
+import Foundation
+import SwiftUI
 
 struct ContentView: View {
     let fontRegular = "JetBrainsMonoNL-Regular"
     let fontBold = "JetBrainsMono-Bold"
-    let cryptoList = ["Bitcoin", "Ethereum", "Tether", "USD Coin", "BNB", "XRP", "Cardano", "Binance USD", "Solana", "Polkadot", "Dogecoin", "Avalanche", "Dai", "Polygon", "Shiba Inu", "Uniswap", "TRON", "Wrapped Bitcoin", "Ethereum Classic", "UNUS SED LEO", "Litecoin", "FTX Token", "NEAR Protocol", "Chainlink", "Cronos", "Cosmos", "Stellar", "Flow", "Monero", "Bitcoin Cash", "Algorand"]
-    let pricesList = ["23,797.81", "1,772.39", "1.00", "0.99", "324.27", "0.37", "0.53", "1.00", "42.42", "9.152", "0.07305", "28.38", "0.9994", "0.9232", "0.000001", "8.741", "0.0707", "23,853.45", "37.78", "4.778", "62.45", "31.44", "5.407", "8.596", "0.1520", "11.75", "0.1271", "3.022", "167.11", "143.24", "0.3659"]
     @State var sizeOfText: CGSize = .zero
     @State var fontSizeOfText: CGFloat = 20.0
+    @State private var cryptoPressed = true
+    @State private var aboutPressed = false
+    @ObservedObject var cryptocurrencies = CryptoMarketTicker()
     
     init() {
         
@@ -26,57 +29,67 @@ struct ContentView: View {
                 VStack {
                     Image("logo").resizable()
                         .aspectRatio(contentMode: .fit)
+                        .frame(width: UIScreen.screenWidth - 30, alignment: .center)
+                        .shadow(color: .black, radius: 2, x: 4, y: 4)
+                    
                     Rectangle()
-                        .frame(width: UIScreen.screenWidth - 7, height: UIScreen.screenHeight - 320, alignment: .center)
-                        .foregroundColor(.gray)
+                        .frame(width: UIScreen.screenWidth - 30, height: UIScreen.screenHeight - 340, alignment: .center)
+                        .foregroundColor(Color("FrameBackground"))
+                        .shadow(color: .black, radius: 1, x: 2, y: 2)
                         .overlay(
-                            Rectangle()
-                                .frame(width: UIScreen.screenWidth - 15, height: UIScreen.screenHeight - 330, alignment: .center)
-                                .foregroundColor(.gray)
-                                .border(.white, width:6)
+                            Rectangle().frame(width: UIScreen.screenWidth - 31, height: UIScreen.screenHeight - 350, alignment: .center)
+                                .foregroundColor(.white).border(Color("FrameBackground"), width:6)
                                 .overlay(
-                                    Rectangle().frame(width: UIScreen.screenWidth - 31, height: UIScreen.screenHeight - 350, alignment: .center)
-                                        .foregroundColor(.gray).border(.white, width:6)
+                                    Rectangle().frame(width: UIScreen.screenWidth - 70, height: UIScreen.screenHeight - 400, alignment: .center)
+                                        .foregroundColor(.white).border(.black, width:1).opacity(0.3)
                                         .overlay(
-                                            Rectangle().frame(width: UIScreen.screenWidth - 70, height: UIScreen.screenHeight - 400, alignment: .center)
-                                                .foregroundColor(.gray).border(.black, width:1).opacity(0.3)
+                                            Rectangle().frame(width: UIScreen.screenWidth - 90, height: UIScreen.screenHeight - 405, alignment: .center)
+                                                .foregroundColor(.white)
                                                 .overlay(
-                                                    Rectangle().frame(width: UIScreen.screenWidth - 90, height: UIScreen.screenHeight - 405, alignment: .center)
-                                                        .foregroundColor(.gray)
+                                                    Text("Cryptocurrencies")
+                                                        .font(Font.custom(fontRegular, size:17))
+                                                        .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 40, y:-2)
                                                         .overlay(
-                                                            Text("Cryptocurrencies")
-                                                                .font(Font.custom(fontRegular, size:17))
-                                                                .frame(height: fontSizeOfText, alignment: .center).background(.gray).position(x: UIScreen.screenWidth / 2 - 40, y:-2)
-                                                                .overlay(
-                                                                    ScrollView(.vertical, showsIndicators: false) {
-                                                                        VStack (alignment: .leading) {
-                                                                            HStack() {
-                                                                                Text("Crypto")
-                                                                                    .font(Font.custom(fontBold, size:15))
-                                                                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                                                                Text("$")
-                                                                                    .font(Font.custom(fontBold, size:15))
-                                                                                    .frame(maxWidth: .infinity, alignment: .trailing)
-                                                                            }
-                                                                            ForEach(0 ..< cryptoList.count, id: \.self) { i in
-                                                                                let crypto = cryptoList[i]
-                                                                                let price = pricesList[i]
-                                                                                HStack {
-                                                                                    Text("\(crypto)")
-                                                                                        .font(Font.custom(fontRegular, size:15))
-                                                                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                                                                    Text("\(price)")
-                                                                                        .font(Font.custom(fontRegular, size:15))
-                                                                                        .frame(maxWidth: .infinity, alignment: .trailing)
-                                                                                }
-                                                                            }
+                                                            ScrollView(.vertical, showsIndicators: false) {
+                                                                //                                                                RefreshableView()
+                                                                VStack (alignment: .leading) {
+                                                                    HStack() {
+                                                                        Text("Crypto")
+                                                                            .font(Font.custom(fontBold, size:15))
+                                                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                                                        Text("USD")
+                                                                            .font(Font.custom(fontBold, size:15))
+                                                                            .frame(maxWidth: .infinity, alignment: .trailing)
+                                                                    }
+                                                                    let cryptoArray = cryptocurrencies.cryptocurrencies
+                                                                    
+                                                                    ForEach(0 ..< cryptoArray.count, id: \.self) { i in
+                                                                        let crypto = cryptoArray[i][0]
+                                                                        let price = cryptoArray[i][1]
+                                                                        //                                                                        let crypto = "test"
+                                                                        //                                                                        let price = "test"
+                                                                        HStack {
+                                                                            Text("\(crypto)")
+                                                                                .font(Font.custom(fontRegular, size:15))
+                                                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                                            Text("\(price)")
+                                                                                .font(Font.custom(fontRegular, size:15))
+                                                                                .frame(maxWidth: .infinity, alignment: .trailing)
                                                                         }
                                                                     }
-                                                                ))))))
+                                                                }
+                                                            }
+                                                            //                                                                .refreshable {
+                                                            //                                                                cryptocurrencies.refresh()
+                                                            //                                                            }
+                                                        )))))
                     HStack(spacing: 90) {
                         let widthOfAboutButton = "About".widthOfString(usingFont: UIFont.systemFont(ofSize: 17, weight: .bold))
                         let widthOfCryptoButton = "Crypto".widthOfString(usingFont: UIFont.systemFont(ofSize: 17, weight: .bold))
                         Button(action: {
+                            self.cryptoPressed = true
+                            self.aboutPressed = false
+                            self.cryptocurrencies.refresh()
                         }) {
                             (
                                 Text("C").foregroundColor(Color("FirstLetterColor"))
@@ -86,13 +99,20 @@ struct ContentView: View {
                             .font(.system(size: 17).monospaced())
                             .fontWeight(.bold)
                             .padding()
-                            .background(Rectangle().fill(Color("ButtonBackground"))
+                            .background(cryptoPressed ?
+                                        Rectangle().fill(Color("ButtonBackgroundPressed"))
+                                .shadow(color: .gray, radius: 0, x: 0, y: 0)
+                                .frame(width: widthOfCryptoButton * 2, height: fontSizeOfText + 5)
+                                .border(width:1, edges: [.top, .bottom, .leading, .trailing], color: .black)
+                                        : Rectangle().fill(Color("ButtonBackground"))
                                 .shadow(color: .gray, radius: 2, x: 8, y: 8)
                                 .frame(width: widthOfCryptoButton * 2, height: fontSizeOfText + 5)
                                 .border(width:1, edges: [.bottom, .trailing], color: .black)
                             )
                         }
                         Button(action: {
+                            self.aboutPressed = true
+                            self.cryptoPressed = false
                         }) {
                             (
                                 Text("A").foregroundColor(Color("FirstLetterColor"))
@@ -102,7 +122,12 @@ struct ContentView: View {
                             .font(.system(size: 17).monospaced())
                             .fontWeight(.bold)
                             .padding()
-                            .background(Rectangle().fill(Color("ButtonBackground"))
+                            .background(aboutPressed ?
+                                        Rectangle().fill(Color("ButtonBackgroundPressed"))
+                                .shadow(color: .gray, radius: 0, x: 0, y: 0)
+                                .frame(width: widthOfAboutButton * 2, height: fontSizeOfText + 5)
+                                .border(width:1, edges: [.top, .bottom, .leading, .trailing], color: .black)
+                                        : Rectangle().fill(Color("ButtonBackground"))
                                 .shadow(color: .gray, radius: 2, x: 8, y: 8)
                                 .frame(width: widthOfAboutButton * 2, height: fontSizeOfText + 5)
                                 .border(width:1, edges: [.bottom, .trailing], color: .black)
@@ -110,7 +135,7 @@ struct ContentView: View {
                         }
                     }.frame(width: UIScreen.screenWidth - 80, alignment: .top)
                 }
-            )
+            ).statusBar(hidden: true)
     }
 }
 
@@ -202,5 +227,119 @@ struct EdgeBorder: Shape {
             path.addPath(Path(CGRect(x: x, y: y, width: w, height: h)))
         }
         return path
+    }
+}
+
+struct Response: Codable {
+    var results: [Result]
+}
+
+struct Result: Codable {
+    var name: String
+    var price: String
+}
+
+
+class CryptoMarketTicker: ObservableObject {
+    @Published var dataIsLoaded: Bool = false
+    @Published var cryptocurrencies: [[String]] = []
+    private var mapOfCrypto : [String: String] = [:]
+    private var orderBasedOnMarketCap : [String] = []
+    private var poolOfExistingCrypto : Set<String> = []
+    private let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false"
+    
+    init() {
+        loadJson(url)
+    }
+    
+    func refresh() {
+        self.loadJson(url)
+    }
+    
+    func loadJson(_ urlString: String) {
+        let url = URL(string: urlString)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        let task = URLSession.shared.dataTask(with: request) {(data, response, error) in
+            guard error == nil else {
+                print ("Error: \(error!)")
+                return
+            }
+            
+            guard let content = data else {
+                print("No data")
+                return
+            }
+            guard let json = try? JSONSerialization.jsonObject(with: content, options: []) else { return }
+            let jsonobj = json as! [[String:Any]]
+            DispatchQueue.main.async {
+                for i in 0..<jsonobj[0].count {
+                    let cryptoName = String(describing: jsonobj[i]["name"]!)
+                    let longPrice = String(describing: jsonobj[i]["current_price"]!)
+                    var currentPrice = longPrice
+                    if longPrice.count > 15 {
+                        let index = longPrice.index(longPrice.startIndex, offsetBy: 15)
+                        currentPrice = String(describing: longPrice[..<index])
+                    }
+                    if (cryptoName != "" && currentPrice != "") {
+                        if !self.poolOfExistingCrypto.contains(cryptoName) {
+                            self.orderBasedOnMarketCap.append(cryptoName)
+                            self.poolOfExistingCrypto.insert(cryptoName)
+                        }
+                        self.mapOfCrypto[cryptoName] = currentPrice
+                    }
+                    
+                }
+                self.cryptocurrencies.removeAll()
+                print(self.mapOfCrypto)
+                for i in 0..<self.orderBasedOnMarketCap.count {
+                    let name = self.orderBasedOnMarketCap[i]
+                    let price = self.mapOfCrypto[self.orderBasedOnMarketCap[i]]!
+                    self.cryptocurrencies.append([name, price])
+                }
+                self.dataIsLoaded = true
+            }
+        }
+        task.resume()
+    }
+}
+
+struct RefreshableView: View {
+    @Environment(\.refresh) private var refresh
+    
+    @State private var isRefreshing = false
+    
+    var body: some View {
+        VStack {
+            if isRefreshing {
+                ProgressView()
+                    .transition(.scale)
+            }
+        }
+        .animation(.default, value: isRefreshing)
+        .background(GeometryReader {
+            // detect Pull-to-refresh
+            Color.clear.preference(key: ViewOffsetKey.self, value: -$0.frame(in: .global).origin.y)
+        })
+        .onPreferenceChange(ViewOffsetKey.self) {
+            if $0 < -80 && !isRefreshing {
+                isRefreshing = true
+                Task {
+                    await refresh?()
+                    await MainActor.run {
+                        isRefreshing = false
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct ViewOffsetKey: PreferenceKey {
+    typealias Value = CGFloat
+    static var defaultValue = CGFloat.zero
+    static func reduce(value: inout Value, nextValue: () -> Value) {
+        value += nextValue()
     }
 }
