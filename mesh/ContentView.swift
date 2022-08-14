@@ -35,11 +35,11 @@ struct ContentView: View {
                         .frame(width: UIScreen.screenWidth - 30, height: UIScreen.screenHeight - 350, alignment: .center)
                         .foregroundColor(Color("FrameBackground"))
                         .border(Color("FrameBackground"), width:6)
-                        .shadow(color: .black, radius: 2, x: 4, y: 4)
+                        .shadow(color: .black, radius: 1, x: 5, y: 5)
                         .overlay(
                             Rectangle().frame(width: UIScreen.screenWidth - 31, height: UIScreen.screenHeight - 350, alignment: .center)
                                 .foregroundColor(.white).border(Color("FrameBackground"), width:3)
-                                .shadow(color: .white, radius: 3, x: 1, y: 1)
+//                                .shadow(color: .white, radius: 3, x: 1, y: 1)
                                 .overlay(
                                     Rectangle().frame(width: UIScreen.screenWidth - 70, height: UIScreen.screenHeight - 400, alignment: .center)
                                         .foregroundColor(.white).border(.black, width:1).opacity(0.3)
