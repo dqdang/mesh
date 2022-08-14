@@ -15,6 +15,7 @@
 		857A205928A08412001912CA /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857A205828A08412001912CA /* Persistence.swift */; };
 		857A205C28A08412001912CA /* mesh.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 857A205A28A08412001912CA /* mesh.xcdatamodeld */; };
 		857A207028A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 857A206F28A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf */; };
+		85FFE4F728A993670061DC35 /* px sans nouveaux.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 85FFE4F628A993670061DC35 /* px sans nouveaux.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,7 @@
 		857A205828A08412001912CA /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
 		857A205B28A08412001912CA /* mesh.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = mesh.xcdatamodel; sourceTree = "<group>"; };
 		857A206F28A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JetBrainsMonoNL-Regular.ttf"; sourceTree = "<group>"; };
+		85FFE4F628A993670061DC35 /* px sans nouveaux.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "px sans nouveaux.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +62,7 @@
 			isa = PBXGroup;
 			children = (
 				857A204F28A08412001912CA /* meshApp.swift */,
+				85FFE4F628A993670061DC35 /* px sans nouveaux.ttf */,
 				857A206F28A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf */,
 				8531F47C28A0D75D009F4F17 /* JetBrainsMono-Bold.ttf */,
 				857A205128A08412001912CA /* ContentView.swift */,
@@ -140,6 +143,7 @@
 				857A205728A08412001912CA /* Preview Assets.xcassets in Resources */,
 				857A205428A08412001912CA /* Assets.xcassets in Resources */,
 				857A207028A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf in Resources */,
+				85FFE4F728A993670061DC35 /* px sans nouveaux.ttf in Resources */,
 				8531F47D28A0D75D009F4F17 /* JetBrainsMono-Bold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
