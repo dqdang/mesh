@@ -22,8 +22,8 @@ struct ContentView: View {
     @State private var drawingActivated = false
     @State private var showDrawingResult = false
     @State private var drawingResult = ""
-
-
+    
+    
     @ObservedObject private var cryptocurrencies = CryptoMarketTicker()
     @State private var currentDrawing: Drawing = Drawing()
     @State private var drawings: [Drawing] = [Drawing]()
@@ -31,13 +31,21 @@ struct ContentView: View {
     
     init() {
     }
-
+    
     func handleDrawing(drawing: String) {
         self.drawings.removeAll()
-        if drawing == "cat" {
+        if drawing == "cat" || drawing == "cut" || drawing  == "(at" {
             self.drawingActivated = false
             self.showDrawingResult = true
             self.drawingResult = "https://twitter.com/thurstonwaffles/status/1138952578832707585"
+        }
+        else if drawing == "dog" || drawing == "dug" || drawing == "dag" {
+            self.drawingActivated = false
+            self.showDrawingResult = true
+            self.drawingResult = "https://twitter.com/DailyDogs247/status/994369976936095744"
+        }
+        else {
+            print(drawing)
         }
     }
     
@@ -72,7 +80,7 @@ struct ContentView: View {
                                                     .overlay(
                                                         Text("Cryptocurrencies")
                                                             .font(Font.custom(fontRegular, size:17))
-                                                            .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 40, y:-2)
+                                                            .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 42, y:-2)
                                                             .overlay(
                                                                 ScrollView(.vertical, showsIndicators: false) {
                                                                     RefreshableView(cryptocurrencies:cryptocurrencies)
