@@ -8,6 +8,7 @@
 import Combine
 import CoreData
 import Foundation
+import Model3DView
 import SwiftUI
 import Vision
 
@@ -22,13 +23,16 @@ struct ContentView: View {
     @State private var drawingActivated = false
     @State private var showDrawingResult = false
     @State private var drawingResult = ""
-    
-    
+
+
     @ObservedObject private var cryptocurrencies = CryptoMarketTicker()
     @State private var currentDrawing: Drawing = Drawing()
     @State private var drawings: [Drawing] = [Drawing]()
     @State private var rect1: CGRect = .zero
-    
+    @State var camera = PerspectiveCamera()
+    @State private var degrees = 270.0
+
+
     init() {
     }
     
@@ -48,7 +52,7 @@ struct ContentView: View {
             print(drawing)
         }
     }
-    
+
     var body: some View {
         if self.cryptoPressed {
             Color("Background").ignoresSafeArea(.all)
@@ -248,15 +252,30 @@ struct ContentView: View {
                                                                     else {
                                                                         Text("Just another crypto app")
                                                                             .font(Font.custom(fontRegular, size:17))
-                                                                            .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 40, y:50)
-                                                                        Image("logoNoBackground").resizable()
-                                                                            .aspectRatio(contentMode: .fit)
-                                                                            .frame(width: UIScreen.screenWidth - 30, height: UIScreen.screenWidth / 2, alignment: .center)
+                                                                            .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:50)
+//                                                                        Image("logoNoBackground").resizable()
+//                                                                            .aspectRatio(contentMode: .fit)
+//                                                                            .frame(width: UIScreen.screenWidth - 30, height: UIScreen.screenWidth / 2, alignment: .center)
+//                                                                            .onLongPressGesture {
+//                                                                                self.drawingActivated = true
+//                                                                            }
+                                                                        Model3DView(named: "scene.gltf")
+                                                                            .transform(
+                                                                                rotate: Euler(x: .degrees(self.degrees)),
+                                                                                scale: 1
+                                                                            )
+                                                                            .cameraControls(OrbitControls(
+                                                                                    camera: $camera,
+                                                                                    sensitivity: 0.8,
+                                                                                    friction: 0.1
+                                                                                ))
+                                                                            .frame(height: UIScreen.screenHeight - 650, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:55)
+
+                                                                        Text("Copyright © 2022 Mesh Finance. All rights reserved.").font(Font.custom(fontRegular, size:7))
+                                                                            .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:70)
                                                                             .onLongPressGesture {
                                                                                 self.drawingActivated = true
                                                                             }
-                                                                        Text("Copyright © 2022 Mesh Finance. All rights reserved.").font(Font.custom(fontRegular, size:7))
-                                                                            .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 40)
                                                                     }
                                                                 }
                                                             )))))
@@ -337,7 +356,7 @@ extension UIScreen{
 struct sizeOfView: View {
     @Binding var fontSizeOfText: CGFloat
     @Binding var sizeOfText: CGSize
-    
+
     var body: some View {
         GeometryReader { proxy in
             HStack {}
@@ -428,7 +447,7 @@ class CryptoMarketTicker: ObservableObject {
     private var orderBasedOnMarketCap : [String] = []
     private var poolOfExistingCrypto : Set<String> = []
     private let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false"
-    
+
     init() {
         loadJson(url)
     }
@@ -436,7 +455,7 @@ class CryptoMarketTicker: ObservableObject {
     func refresh() async {
         self.loadJson(url)
     }
-    
+
     func loadJson(_ urlString: String) {
         let url = URL(string: urlString)!
         var request = URLRequest(url: url)
@@ -447,7 +466,7 @@ class CryptoMarketTicker: ObservableObject {
                 print("Error: \(error!)")
                 return
             }
-            
+
             guard let content = data else {
                 print("No data")
                 return
@@ -471,7 +490,7 @@ class CryptoMarketTicker: ObservableObject {
                         self.mapOfCrypto[cryptoName] = currentPrice
                     }
                 }
-                
+
                 self.cryptocurrencies.removeAll()
                 for i in 0..<self.orderBasedOnMarketCap.count {
                     let name = self.orderBasedOnMarketCap[i]
@@ -590,7 +609,7 @@ struct DrawingPad : View {
         }
         .frame(width: UIScreen.screenWidth - 90, height: UIScreen.screenHeight - 437, alignment: .center)
     }
-    
+
     private func add(drawing: Drawing, toPath path: inout Path) {
         let points = drawing.points
         if points.count > 1 {
@@ -612,12 +631,12 @@ struct RectGetter: View {
             self.createView(proxy: proxy)
         }
     }
-    
+
     func createView(proxy: GeometryProxy) -> some View {
         DispatchQueue.main.async {
             self.rect = proxy.frame(in: .global)
         }
-        
+
         return Rectangle().fill(Color.clear)
     }
 }

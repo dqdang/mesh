@@ -15,6 +15,10 @@
 		857A205928A08412001912CA /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857A205828A08412001912CA /* Persistence.swift */; };
 		857A205C28A08412001912CA /* mesh.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 857A205A28A08412001912CA /* mesh.xcdatamodeld */; };
 		857A207028A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 857A206F28A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf */; };
+		85C67551299B357900ECF900 /* Model3DView in Frameworks */ = {isa = PBXBuildFile; productRef = 85C67550299B357900ECF900 /* Model3DView */; };
+		85C6755F299B3EDD00ECF900 /* scene.gltf in Resources */ = {isa = PBXBuildFile; fileRef = 85C6755C299B3EDD00ECF900 /* scene.gltf */; };
+		85C67560299B3EDD00ECF900 /* scene.bin in Resources */ = {isa = PBXBuildFile; fileRef = 85C6755D299B3EDD00ECF900 /* scene.bin */; };
+		85C67564299B3F5400ECF900 /* base.png in Resources */ = {isa = PBXBuildFile; fileRef = 85C67563299B3F5400ECF900 /* base.png */; };
 		85FFE4F728A993670061DC35 /* px sans nouveaux.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 85FFE4F628A993670061DC35 /* px sans nouveaux.ttf */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +32,9 @@
 		857A205828A08412001912CA /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
 		857A205B28A08412001912CA /* mesh.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = mesh.xcdatamodel; sourceTree = "<group>"; };
 		857A206F28A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JetBrainsMonoNL-Regular.ttf"; sourceTree = "<group>"; };
+		85C6755C299B3EDD00ECF900 /* scene.gltf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = scene.gltf; sourceTree = "<group>"; };
+		85C6755D299B3EDD00ECF900 /* scene.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = scene.bin; sourceTree = "<group>"; };
+		85C67563299B3F5400ECF900 /* base.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = base.png; sourceTree = "<group>"; };
 		85FFE4F628A993670061DC35 /* px sans nouveaux.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "px sans nouveaux.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -36,6 +43,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				85C67551299B357900ECF900 /* Model3DView in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,6 +69,9 @@
 		857A204E28A08412001912CA /* mesh */ = {
 			isa = PBXGroup;
 			children = (
+				85C6755D299B3EDD00ECF900 /* scene.bin */,
+				85C6755C299B3EDD00ECF900 /* scene.gltf */,
+				85C67563299B3F5400ECF900 /* base.png */,
 				857A204F28A08412001912CA /* meshApp.swift */,
 				85FFE4F628A993670061DC35 /* px sans nouveaux.ttf */,
 				857A206F28A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf */,
@@ -98,6 +109,9 @@
 			dependencies = (
 			);
 			name = mesh;
+			packageProductDependencies = (
+				85C67550299B357900ECF900 /* Model3DView */,
+			);
 			productName = mesh;
 			productReference = 857A204C28A08412001912CA /* mesh.app */;
 			productType = "com.apple.product-type.application";
@@ -126,6 +140,9 @@
 				Base,
 			);
 			mainGroup = 857A204328A08412001912CA;
+			packageReferences = (
+				85C6754F299B357900ECF900 /* XCRemoteSwiftPackageReference "Model3DView" */,
+			);
 			productRefGroup = 857A204D28A08412001912CA /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -141,10 +158,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				857A205728A08412001912CA /* Preview Assets.xcassets in Resources */,
+				85C6755F299B3EDD00ECF900 /* scene.gltf in Resources */,
+				85C67564299B3F5400ECF900 /* base.png in Resources */,
 				857A205428A08412001912CA /* Assets.xcassets in Resources */,
 				857A207028A09DE2001912CA /* JetBrainsMonoNL-Regular.ttf in Resources */,
 				85FFE4F728A993670061DC35 /* px sans nouveaux.ttf in Resources */,
 				8531F47D28A0D75D009F4F17 /* JetBrainsMono-Bold.ttf in Resources */,
+				85C67560299B3EDD00ECF900 /* scene.bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -292,7 +312,6 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = mesh/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
@@ -326,7 +345,6 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = mesh/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
@@ -369,6 +387,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		85C6754F299B357900ECF900 /* XCRemoteSwiftPackageReference "Model3DView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/frzi/Model3DView.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		85C67550299B357900ECF900 /* Model3DView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 85C6754F299B357900ECF900 /* XCRemoteSwiftPackageReference "Model3DView" */;
+			productName = Model3DView;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		857A205A28A08412001912CA /* mesh.xcdatamodeld */ = {
