@@ -347,7 +347,7 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
-extension UIScreen{
+extension UIScreen {
     static let screenWidth = UIScreen.main.bounds.size.width
     static let screenHeight = UIScreen.main.bounds.size.height
     static let screenSize = UIScreen.main.bounds.size
@@ -451,7 +451,7 @@ class CryptoMarketTicker: ObservableObject {
     init() {
         loadJson(url)
     }
-    
+
     func refresh() async {
         self.loadJson(url)
     }
@@ -512,11 +512,11 @@ struct RefreshableView: View {
     @State private var fontSizeOfText: CGFloat = 20.0
     @State private var isRefreshing = false
     @ObservedObject var cryptocurrencies : CryptoMarketTicker
-    
+
     init(cryptocurrencies : CryptoMarketTicker) {
         self.cryptocurrencies = cryptocurrencies
     }
-    
+
     var body: some View {
         VStack (alignment: .leading) {
             if isRefreshing {
