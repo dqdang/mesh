@@ -5,6 +5,7 @@
 //  Created by Derek Dang on 8/7/22.
 //
 
+import Charts
 import Combine
 import CoreData
 import Foundation
@@ -24,8 +25,8 @@ struct ContentView: View {
     @State private var showDrawingResult = false
     @State private var drawingResult = ""
 
-
     @ObservedObject private var cryptocurrencies = CryptoMarketTicker()
+
     @State private var currentDrawing: Drawing = Drawing()
     @State private var drawings: [Drawing] = [Drawing]()
     @State private var rect1: CGRect = .zero
@@ -253,12 +254,6 @@ struct ContentView: View {
                                                                         Text("Just another crypto app")
                                                                             .font(Font.custom(fontRegular, size:17))
                                                                             .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:50)
-//                                                                        Image("logoNoBackground").resizable()
-//                                                                            .aspectRatio(contentMode: .fit)
-//                                                                            .frame(width: UIScreen.screenWidth - 30, height: UIScreen.screenWidth / 2, alignment: .center)
-//                                                                            .onLongPressGesture {
-//                                                                                self.drawingActivated = true
-//                                                                            }
                                                                         Model3DView(named: "scene.gltf")
                                                                             .transform(
                                                                                 rotate: Euler(x: .degrees(self.degrees)),
@@ -430,30 +425,22 @@ struct EdgeBorder: Shape {
     }
 }
 
-struct Response: Codable {
-    var results: [Result]
-}
-
-struct Result: Codable {
-    var name: String
-    var price: String
-}
-
-
 class CryptoMarketTicker: ObservableObject {
     @Published var dataIsLoaded: Bool = false
     @Published var cryptocurrencies: [[String]] = []
-    private var mapOfCrypto : [String: String] = [:]
+    @Published var cryptocurrenciesId: [[String]] = []
+    private var mapOfCryptoNameToPrices : [String: String] = [:]
+    private var mapOfCryptoNameToId : [String: String] = [:]
     private var orderBasedOnMarketCap : [String] = []
     private var poolOfExistingCrypto : Set<String> = []
     private let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false"
 
     init() {
-        loadJson(url)
+        loadJson(self.url)
     }
 
     func refresh() async {
-        self.loadJson(url)
+        self.loadJson(self.url)
     }
 
     func loadJson(_ urlString: String) {
@@ -476,6 +463,7 @@ class CryptoMarketTicker: ObservableObject {
             DispatchQueue.main.async {
                 for i in 0..<jsonobj.count {
                     let cryptoName = String(describing: jsonobj[i]["name"]!)
+                    let cryptoId = String(describing: jsonobj[i]["id"]!)
                     let longPrice = String(describing: jsonobj[i]["current_price"]!)
                     var currentPrice = longPrice
                     if longPrice.count > 15 {
@@ -487,17 +475,75 @@ class CryptoMarketTicker: ObservableObject {
                             self.orderBasedOnMarketCap.append(cryptoName)
                             self.poolOfExistingCrypto.insert(cryptoName)
                         }
-                        self.mapOfCrypto[cryptoName] = currentPrice
+                        self.mapOfCryptoNameToPrices[cryptoName] = currentPrice
+                        self.mapOfCryptoNameToId[cryptoName] = cryptoId
                     }
                 }
 
                 self.cryptocurrencies.removeAll()
                 for i in 0..<self.orderBasedOnMarketCap.count {
                     let name = self.orderBasedOnMarketCap[i]
-                    let price = self.mapOfCrypto[self.orderBasedOnMarketCap[i]]!
+                    let price = self.mapOfCryptoNameToPrices[self.orderBasedOnMarketCap[i]]!
+                    let id = self.mapOfCryptoNameToId[self.orderBasedOnMarketCap[i]]!
                     self.cryptocurrencies.append([name, price])
+                    self.cryptocurrenciesId.append([name, id])
                 }
                 self.dataIsLoaded = true
+            }
+        }
+        task.resume()
+    }
+}
+
+class CryptoGraph: ObservableObject {
+    @Published var prices: [[Any]] = []
+    private var selectedCrypto = ""
+    private var url = ""
+
+    init(selectedCrypto: String) {
+        self.selectedCrypto = selectedCrypto
+        self.url = "https://api.coingecko.com/api/v3/coins/\(self.selectedCrypto.lowercased())/market_chart?vs_currency=usd&days=7"
+        loadJson(self.url)
+    }
+
+    func convertDate(dateValue: Int) -> String {
+        let truncatedTime = Int(dateValue / 1000)
+        let date = Date(timeIntervalSince1970: TimeInterval(truncatedTime))
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(abbreviation: "UTC")
+        formatter.dateFormat = "yyyyMMdd"
+        return formatter.string(from: date)
+    }
+
+    func loadJson(_ urlString: String) {
+        let url = URL(string: urlString)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        let task = URLSession.shared.dataTask(with: request) {(data, response, error) in
+            guard error == nil else {
+                print("Error: \(error!)")
+                return
+            }
+
+            guard let content = data else {
+                print("No data")
+                return
+            }
+            guard let json = try? JSONSerialization.jsonObject(with: content, options: []) else { return }
+            let jsonobj = json as! [String:Any]
+            DispatchQueue.main.async {
+                let all_prices = jsonobj["prices"] as! NSArray
+                for i in 0..<all_prices.count {
+                    let cur_price = all_prices[i] as! NSArray
+                    let time = cur_price[0] as! NSInteger
+                    let convertedTime = self.convertDate(dateValue: time)
+                    let formatter = DateFormatter()
+                    formatter.dateFormat = "yyyyMMdd"
+                    let formattedDate = formatter.date(from: convertedTime) ?? Date.distantPast
+                    let market_price = cur_price[1] as! Double
+                    self.prices.append([formattedDate, market_price])
+                }
             }
         }
         task.resume()
@@ -511,6 +557,10 @@ struct RefreshableView: View {
     @State private var sizeOfText: CGSize = .zero
     @State private var fontSizeOfText: CGFloat = 20.0
     @State private var isRefreshing = false
+    @State private var isRefreshable = true
+    @State private var showPopup = false
+    @State private var selectedName = ""
+    @State private var selectedId = ""
     @ObservedObject var cryptocurrencies : CryptoMarketTicker
 
     init(cryptocurrencies : CryptoMarketTicker) {
@@ -519,31 +569,67 @@ struct RefreshableView: View {
 
     var body: some View {
         VStack (alignment: .leading) {
-            if isRefreshing {
-                ProgressView()
-                    .transition(.scale)
-                    .position(x: 170, y: 20)
+            if $showPopup.wrappedValue {
+                ZStack {
+                    Color.white
+                    VStack {
+                        Text(self.selectedName).font(Font.custom(fontRegular, size:15))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        GraphView(selectedCrypto: self.selectedId)
+                        Button(action: {
+                            self.isRefreshable = true
+                            self.showPopup = false
+                        }, label: {
+                            Text("Close").font(Font.custom(fontRegular, size:15))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        })
+                    }.padding()
+                }
+                .frame(width:UIScreen.screenWidth / 2 + 100, height: UIScreen.screenHeight / 5 + 250)
+                .border(width:1, edges: [.top, .bottom, .leading, .trailing], color: .black)
+                .cornerRadius(0).shadow(color: .black, radius: 2, x: 5, y: 4)
+                .position(x:UIScreen.screenWidth / 2 - 45, y: UIScreen.screenHeight / 5 + 70)
             }
-            HStack() {
-                Text("Crypto")
-                    .font(Font.custom(fontBold, size:15))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Text("USD")
-                    .font(Font.custom(fontBold, size:15))
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            let cryptoArray = cryptocurrencies.cryptocurrencies
-            
-            ForEach(0 ..< cryptoArray.count, id: \.self) { i in
-                let crypto = cryptoArray[i][0]
-                let price = cryptoArray[i][1]
-                HStack {
-                    Text("\(crypto)")
-                        .font(Font.custom(fontRegular, size:15))
+            else {
+                HStack() {
+                    Text("Crypto")
+                        .font(Font.custom(fontBold, size:15))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text("\(price)")
-                        .font(Font.custom(fontRegular, size:15))
+                    Text("USD")
+                        .font(Font.custom(fontBold, size:15))
                         .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                let cryptoArray = cryptocurrencies.cryptocurrencies
+                let cryptoIdArray = cryptocurrencies.cryptocurrenciesId
+
+                ForEach(0 ..< cryptoArray.count, id: \.self) { i in
+                    let crypto = cryptoArray[i][0]
+                    let price = cryptoArray[i][1]
+                    let id = cryptoIdArray[i][1]
+                    HStack {
+                        Button(action: {
+                            self.selectedName = "\(crypto)"
+                            self.selectedId = "\(id)"
+                            self.showPopup = true
+                            self.isRefreshable = false
+                        }, label: {
+                            Text("\(crypto)")
+                                .font(Font.custom(fontRegular, size:15))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .foregroundColor(.black)
+                        })
+                        Button(action: {
+                            self.selectedName = "\(crypto)"
+                            self.selectedId = "\(id)"
+                            self.showPopup = true
+                            self.isRefreshable = false
+                        }, label: {
+                            Text("\(price)")
+                                .font(Font.custom(fontRegular, size:15))
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                                .foregroundColor(.black)
+                        })
+                    }
                 }
             }
         }
@@ -552,7 +638,7 @@ struct RefreshableView: View {
             Color.clear.preference(key: ViewOffsetKey.self, value: -$0.frame(in: .global).origin.y)
         })
         .onPreferenceChange(ViewOffsetKey.self) {
-            if $0 < -80 && !isRefreshing {
+            if $0 < -80 && !isRefreshing && isRefreshable {
                 isRefreshing = true
                 Task {
                     await refresh?()
@@ -560,6 +646,37 @@ struct RefreshableView: View {
                         isRefreshing = false
                     }
                 }
+            }
+        }
+    }
+}
+
+struct GraphView: View {
+    @ObservedObject var graph : CryptoGraph
+    private let fontRegular = "JetBrainsMonoNL-Regular"
+
+    init(selectedCrypto: String) {
+        self.graph = CryptoGraph(selectedCrypto: selectedCrypto)
+    }
+
+    var body: some View {
+        let pricesArray = graph.prices
+        VStack {
+            if #available(iOS 16.0, *) {
+                Chart {
+                    ForEach(0 ..< pricesArray.count, id: \.self) { i in
+                        let time = pricesArray[i][0] as! Date
+                        let price = pricesArray[i][1] as! Double
+                        LineMark(
+                            x: .value("Time", time, unit: .day),
+                            y: .value("Price", price)
+                        )
+                    }
+                }
+                .chartYScale(domain: .automatic(includesZero: false))
+            } else {
+                Text("OS Version does not support charting!")
+                    .font(Font.custom(fontRegular, size:17))
             }
         }
     }
