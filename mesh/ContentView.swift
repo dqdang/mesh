@@ -40,18 +40,17 @@ struct ContentView: View {
     func handleDrawing(drawing: String) {
         self.drawings.removeAll()
         if drawing == "cat" || drawing == "cut" || drawing  == "(at" {
-            self.drawingActivated = false
-            self.showDrawingResult = true
             self.drawingResult = "https://twitter.com/thurstonwaffles/status/1138952578832707585"
         }
         else if drawing == "dog" || drawing == "dug" || drawing == "dag" {
-            self.drawingActivated = false
-            self.showDrawingResult = true
             self.drawingResult = "https://twitter.com/DailyDogs247/status/994369976936095744"
         }
         else {
+            self.drawingResult = "https://letmegooglethat.com/?q=" + drawing
             print(drawing)
         }
+        self.drawingActivated = false
+        self.showDrawingResult = true
     }
 
     var body: some View {
@@ -429,17 +428,21 @@ class CryptoMarketTicker: ObservableObject {
     @Published var dataIsLoaded: Bool = false
     @Published var cryptocurrencies: [[String]] = []
     @Published var cryptocurrenciesId: [[String]] = []
+    private var failed: Bool = false
     private var mapOfCryptoNameToPrices : [String: String] = [:]
     private var mapOfCryptoNameToId : [String: String] = [:]
     private var orderBasedOnMarketCap : [String] = []
     private var poolOfExistingCrypto : Set<String> = []
-    private let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false"
+    private let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=125&page=1&sparkline=false"
 
     init() {
         loadJson(self.url)
     }
 
     func refresh() async {
+        if self.failed {
+            return
+        }
         self.loadJson(self.url)
     }
 
@@ -459,7 +462,7 @@ class CryptoMarketTicker: ObservableObject {
                 return
             }
             guard let json = try? JSONSerialization.jsonObject(with: content, options: []) else { return }
-            let jsonobj = json as! [[String:Any]]
+            guard let jsonobj = json as? [[String:Any]] else { self.failed = true; return }
             DispatchQueue.main.async {
                 for i in 0..<jsonobj.count {
                     let cryptoName = String(describing: jsonobj[i]["name"]!)
