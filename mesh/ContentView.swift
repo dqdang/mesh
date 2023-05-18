@@ -434,6 +434,7 @@ class CryptoMarketTicker: ObservableObject {
     private var orderBasedOnMarketCap : [String] = []
     private var poolOfExistingCrypto : Set<String> = []
     private let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=125&page=1&sparkline=false"
+    private let urlBackup = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc"
 
     init() {
         loadJson(self.url)
@@ -461,8 +462,15 @@ class CryptoMarketTicker: ObservableObject {
                 print("No data")
                 return
             }
-            guard let json = try? JSONSerialization.jsonObject(with: content, options: []) else { return }
-            guard let jsonobj = json as? [[String:Any]] else { self.failed = true; return }
+            guard let json = try? JSONSerialization.jsonObject(with: content, options: []) else {
+                print("Error serializing JSON")
+                return self.loadJson(self.urlBackup)
+            }
+            guard let jsonobj = json as? [[String:Any]] else {
+                self.failed = true
+                print("Failed converting to JSON object")
+                return self.loadJson(self.urlBackup)
+            }
             DispatchQueue.main.async {
                 for i in 0..<jsonobj.count {
                     let cryptoName = String(describing: jsonobj[i]["name"]!)
