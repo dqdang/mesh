@@ -31,7 +31,7 @@ struct ContentView: View {
     @State private var drawings: [Drawing] = [Drawing]()
     @State private var rect1: CGRect = .zero
     @State var camera = PerspectiveCamera()
-    @State private var degrees = 270.0
+    @State private var degrees = 271.1
 
 
     init() {
