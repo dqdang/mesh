@@ -250,7 +250,7 @@ struct ContentView: View {
                                                                             .font(Font.custom(fontRegular, size:17))
                                                                     }
                                                                     else {
-                                                                        Text("Just another crypto app")
+                                                                        Text("Retro Crypto Terminal")
                                                                             .font(Font.custom(fontRegular, size:17))
                                                                             .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:50)
                                                                         Model3DView(named: "scene.gltf")
