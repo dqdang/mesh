@@ -425,6 +425,7 @@ struct EdgeBorder: Shape {
 }
 
 class CryptoMarketTicker: ObservableObject {
+    private var isLoading = false
     @Published var dataIsLoaded: Bool = false
     @Published var cryptocurrencies: [[String]] = []
     @Published var cryptocurrenciesId: [[String]] = []
@@ -448,11 +449,20 @@ class CryptoMarketTicker: ObservableObject {
     }
 
     func loadJson(_ urlString: String) {
+        guard !isLoading else {
+            print("Request is already in progress. Please wait.")
+            return
+        }
+
+        isLoading = true
         let url = URL(string: urlString)!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
         let task = URLSession.shared.dataTask(with: request) {(data, response, error) in
+            defer {
+                self.isLoading = false
+            }
             guard error == nil else {
                 print("Error: \(error!)")
                 return
@@ -507,6 +517,7 @@ class CryptoMarketTicker: ObservableObject {
 }
 
 class CryptoGraph: ObservableObject {
+    private var isLoading = false
     @Published var prices: [[Any]] = []
     private var selectedCrypto = ""
     private var url = ""
@@ -527,6 +538,12 @@ class CryptoGraph: ObservableObject {
     }
 
     func loadJson(_ urlString: String) {
+        guard !isLoading else {
+            print("Request is already in progress. Please wait.")
+            return
+        }
+
+        isLoading = true
         let url = URL(string: urlString)!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -542,9 +559,15 @@ class CryptoGraph: ObservableObject {
                 return
             }
             guard let json = try? JSONSerialization.jsonObject(with: content, options: []) else { return }
-            let jsonobj = json as! [String:Any]
+            guard let jsonobj = json as? [String:Any] else {
+                print("Failed converting to JSON object")
+                return
+            }
             DispatchQueue.main.async {
-                let all_prices = jsonobj["prices"] as! NSArray
+                guard let all_prices = jsonobj["prices"] as? NSArray else {
+                    self.prices.append([Date.distantPast, 0.0])
+                    return
+                }
                 for i in 0..<all_prices.count {
                     let cur_price = all_prices[i] as! NSArray
                     let time = cur_price[0] as! NSInteger
@@ -584,9 +607,7 @@ struct RefreshableView: View {
                 ZStack {
                     Color.white
                     VStack {
-                        Text(self.selectedName).font(Font.custom(fontRegular, size:15))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        GraphView(selectedCrypto: self.selectedId)
+                        GraphView(selectedName: self.selectedName, selectedCrypto: self.selectedId)
                         Button(action: {
                             self.isRefreshable = true
                             self.showPopup = false
@@ -665,8 +686,10 @@ struct RefreshableView: View {
 struct GraphView: View {
     @ObservedObject var graph : CryptoGraph
     private let fontRegular = "JetBrainsMonoNL-Regular"
+    private let selectedName: String
 
-    init(selectedCrypto: String) {
+    init(selectedName:String, selectedCrypto: String) {
+        self.selectedName = selectedName
         self.graph = CryptoGraph(selectedCrypto: selectedCrypto)
     }
 
@@ -674,6 +697,12 @@ struct GraphView: View {
         let pricesArray = graph.prices
         VStack {
             if #available(iOS 16.0, *) {
+                if pricesArray.count <= 1 {
+                    Text("Try again later.")
+                        .font(Font.custom(fontRegular, size:17))
+                }
+                Text(self.selectedName).font(Font.custom(fontRegular, size:15))
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Chart {
                     ForEach(0 ..< pricesArray.count, id: \.self) { i in
                         let time = pricesArray[i][0] as! Date
