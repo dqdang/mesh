@@ -384,7 +384,6 @@ extension UIView {
 }
 
 struct EdgeBorder: Shape {
-    
     var width: CGFloat
     var edges: [Edge]
     
@@ -429,7 +428,6 @@ class CryptoMarketTicker: ObservableObject {
     @Published var dataIsLoaded: Bool = false
     @Published var cryptocurrencies: [[String]] = []
     @Published var cryptocurrenciesId: [[String]] = []
-    private var failed: Bool = false
     private var mapOfCryptoNameToPrices : [String: String] = [:]
     private var mapOfCryptoNameToId : [String: String] = [:]
     private var orderBasedOnMarketCap : [String] = []
@@ -442,10 +440,8 @@ class CryptoMarketTicker: ObservableObject {
     }
 
     func refresh() async {
-        if self.failed {
-            return
-        }
-        self.loadJson(self.url)
+        print("Refreshing data...")
+        loadJson(self.url)
     }
 
     func loadJson(_ urlString: String) {
@@ -458,7 +454,7 @@ class CryptoMarketTicker: ObservableObject {
         let url = URL(string: urlString)!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        
+
         let task = URLSession.shared.dataTask(with: request) {(data, response, error) in
             defer {
                 self.isLoading = false
@@ -477,7 +473,6 @@ class CryptoMarketTicker: ObservableObject {
                 return self.loadJson(self.urlBackup)
             }
             guard let jsonobj = json as? [[String:Any]] else {
-                self.failed = true
                 print("Failed converting to JSON object")
                 return self.loadJson(self.urlBackup)
             }
@@ -588,6 +583,10 @@ struct RefreshableView: View {
     @Environment(\.refresh) private var refresh
     private let fontRegular = "JetBrainsMonoNL-Regular"
     private let fontBold = "JetBrainsMono-Bold"
+    @State var camera = PerspectiveCamera()
+    @State private var degrees = 271.1
+    @State private var cachedCryptoArray : [[String]]
+    @State private var cachedCryptoIdArray : [[String]]
     @State private var sizeOfText: CGSize = .zero
     @State private var fontSizeOfText: CGFloat = 20.0
     @State private var isRefreshing = false
@@ -599,6 +598,8 @@ struct RefreshableView: View {
 
     init(cryptocurrencies : CryptoMarketTicker) {
         self.cryptocurrencies = cryptocurrencies
+        self.cachedCryptoArray = cryptocurrencies.cryptocurrencies
+        self.cachedCryptoIdArray = cryptocurrencies.cryptocurrenciesId
     }
 
     var body: some View {
@@ -631,36 +632,57 @@ struct RefreshableView: View {
                         .font(Font.custom(fontBold, size:15))
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                let cryptoArray = cryptocurrencies.cryptocurrencies
-                let cryptoIdArray = cryptocurrencies.cryptocurrenciesId
-
-                ForEach(0 ..< cryptoArray.count, id: \.self) { i in
-                    let crypto = cryptoArray[i][0]
-                    let price = cryptoArray[i][1]
-                    let id = cryptoIdArray[i][1]
-                    HStack {
-                        Button(action: {
-                            self.selectedName = "\(crypto)"
-                            self.selectedId = "\(id)"
-                            self.showPopup = true
-                            self.isRefreshable = false
-                        }, label: {
-                            Text("\(crypto)")
-                                .font(Font.custom(fontRegular, size:15))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .foregroundColor(.black)
-                        })
-                        Button(action: {
-                            self.selectedName = "\(crypto)"
-                            self.selectedId = "\(id)"
-                            self.showPopup = true
-                            self.isRefreshable = false
-                        }, label: {
-                            Text("\(price)")
-                                .font(Font.custom(fontRegular, size:15))
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                                .foregroundColor(.black)
-                        })
+                let cryptoArray = self.cachedCryptoArray
+                let cryptoIdArray = self.cachedCryptoIdArray
+                if cryptoArray.count >= 1 {
+                    ForEach(0 ..< cryptoArray.count, id: \.self) { i in
+                        let crypto = cryptoArray[i][0]
+                        let price = cryptoArray[i][1]
+                        let id = cryptoIdArray[i][1]
+                        HStack {
+                            Button(action: {
+                                self.selectedName = "\(crypto)"
+                                self.selectedId = "\(id)"
+                                self.showPopup = true
+                                self.isRefreshable = false
+                            }, label: {
+                                Text("\(crypto)")
+                                    .font(Font.custom(fontRegular, size:15))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .foregroundColor(.black)
+                            })
+                            Button(action: {
+                                self.selectedName = "\(crypto)"
+                                self.selectedId = "\(id)"
+                                self.showPopup = true
+                                self.isRefreshable = false
+                            }, label: {
+                                Text("\(price)")
+                                    .font(Font.custom(fontRegular, size:15))
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                                    .foregroundColor(.black)
+                            })
+                        }
+                    }
+                }
+                else {
+                    VStack {
+                        Text("Try again later.")
+                            .font(Font.custom(fontRegular, size:17))
+                            .padding()
+                        Model3DView(named: "scene.gltf")
+                            .transform(
+                                rotate: Euler(x: .degrees(self.degrees)),
+                                scale: 1
+                            )
+                            .cameraControls(OrbitControls(
+                                camera: $camera,
+                                sensitivity: 0.8,
+                                friction: 0.1
+                            ))
+                            .frame(height: UIScreen.screenHeight - 650, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:145)
+                        Text("Copyright © 2022 Mesh Finance. All rights reserved.").font(Font.custom(fontRegular, size:7))
+                            .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:70)
                     }
                 }
             }
