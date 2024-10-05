@@ -425,7 +425,7 @@ struct EdgeBorder: Shape {
 
 class CryptoMarketTicker: ObservableObject {
     private var isLoading = false
-    @Published var dataIsLoaded: Bool = false
+    private var retries = 0
     @Published var cryptocurrencies: [[String]] = []
     @Published var cryptocurrenciesId: [[String]] = []
     private var mapOfCryptoNameToPrices : [String: String] = [:]
@@ -435,12 +435,17 @@ class CryptoMarketTicker: ObservableObject {
     private let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=125&page=1&sparkline=false"
     private let urlBackup = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc"
 
+
     init() {
         loadJson(self.url)
     }
 
     func refresh() async {
         print("Refreshing data...")
+        loadJson(self.url)
+    }
+
+    func loadCrypto() {
         loadJson(self.url)
     }
 
@@ -470,11 +475,18 @@ class CryptoMarketTicker: ObservableObject {
             }
             guard let json = try? JSONSerialization.jsonObject(with: content, options: []) else {
                 print("Error serializing JSON")
-                return self.loadJson(self.urlBackup)
+                return
             }
             guard let jsonobj = json as? [[String:Any]] else {
-                print("Failed converting to JSON object")
-                return self.loadJson(self.urlBackup)
+                let msg = "Failed converting to JSON object with: " + urlString
+                print(msg)
+                print(json)
+                self.isLoading = false
+                if self.retries < 5 {
+                    self.loadJson(self.urlBackup)
+                    self.retries += 1
+                }
+                return
             }
             DispatchQueue.main.async {
                 for i in 0..<jsonobj.count {
@@ -504,8 +516,9 @@ class CryptoMarketTicker: ObservableObject {
                     self.cryptocurrencies.append([name, price])
                     self.cryptocurrenciesId.append([name, id])
                 }
-                self.dataIsLoaded = true
             }
+            self.retries = 0
+            self.isLoading = false
         }
         task.resume()
     }
@@ -585,8 +598,8 @@ struct RefreshableView: View {
     private let fontBold = "JetBrainsMono-Bold"
     @State var camera = PerspectiveCamera()
     @State private var degrees = 271.1
-    @State private var cachedCryptoArray : [[String]]
-    @State private var cachedCryptoIdArray : [[String]]
+    @State private var cachedCryptoArray : [[String]] = [[]]
+    @State private var cachedCryptoIdArray : [[String]] = [[]]
     @State private var sizeOfText: CGSize = .zero
     @State private var fontSizeOfText: CGFloat = 20.0
     @State private var isRefreshing = false
@@ -598,6 +611,7 @@ struct RefreshableView: View {
 
     init(cryptocurrencies : CryptoMarketTicker) {
         self.cryptocurrencies = cryptocurrencies
+        self.cryptocurrencies.loadCrypto()
         self.cachedCryptoArray = cryptocurrencies.cryptocurrencies
         self.cachedCryptoIdArray = cryptocurrencies.cryptocurrenciesId
     }
@@ -634,7 +648,7 @@ struct RefreshableView: View {
                 }
                 let cryptoArray = self.cachedCryptoArray
                 let cryptoIdArray = self.cachedCryptoIdArray
-                if cryptoArray.count >= 1 {
+                if cryptoArray.count > 1 {
                     ForEach(0 ..< cryptoArray.count, id: \.self) { i in
                         let crypto = cryptoArray[i][0]
                         let price = cryptoArray[i][1]
@@ -667,7 +681,7 @@ struct RefreshableView: View {
                 }
                 else {
                     VStack {
-                        Text("Try again later.")
+                        Text("Loading...")
                             .font(Font.custom(fontRegular, size:17))
                             .padding()
                         Model3DView(named: "scene.gltf")
@@ -680,7 +694,10 @@ struct RefreshableView: View {
                                 sensitivity: 0.8,
                                 friction: 0.1
                             ))
-                            .frame(height: UIScreen.screenHeight - 650, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:145)
+                            .transaction {
+                                $0.animation = nil
+                            }
+                            .frame(width: UIScreen.screenWidth, height: UIScreen.screenHeight / 2 - 180, alignment: .center).position(x: UIScreen.screenWidth / 2 - 49, y:145)
                         Text("Copyright © 2022 Mesh Finance. All rights reserved.").font(Font.custom(fontRegular, size:7))
                             .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:70)
                     }
