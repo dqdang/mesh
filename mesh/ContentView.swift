@@ -432,12 +432,15 @@ class CryptoMarketTicker: ObservableObject {
     private var mapOfCryptoNameToId : [String: String] = [:]
     private var orderBasedOnMarketCap : [String] = []
     private var poolOfExistingCrypto : Set<String> = []
+    private let orderBasedOnMarketCapKey = "orderBasedOnMarketCap"
+    private let mapOfCryptoNameToPricesKey = "mapOfCryptoNameToPrices"
+    private let mapOfCryptoNameToIdKey = "mapOfCryptoNameToId"
     private let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=125&page=1&sparkline=false"
     private let urlBackup = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc"
 
 
     init() {
-        loadJson(self.url)
+        loadDataFromUserDefaults()
     }
 
     func refresh() async {
@@ -445,8 +448,32 @@ class CryptoMarketTicker: ObservableObject {
         loadJson(self.url)
     }
 
-    func loadCrypto() {
-        loadJson(self.url)
+    private func processJsonData(_ jsonobj: [[String: Any]]) {
+        for item in jsonobj {
+            guard let cryptoName = item["name"] as? String,
+            let cryptoId = item["id"] as? String,
+            let longPrice = item["current_price"] as? Double else { continue }
+            let longPriceString = String(longPrice)
+            let currentPrice = longPriceString.count > 15 ? String(longPriceString.prefix(15)) : longPriceString
+            if !cryptoName.isEmpty && !currentPrice.isEmpty && !self.poolOfExistingCrypto.contains(cryptoName) {
+                self.orderBasedOnMarketCap.append(cryptoName)
+                self.poolOfExistingCrypto.insert(cryptoName)
+                self.mapOfCryptoNameToPrices[cryptoName] = currentPrice
+                self.mapOfCryptoNameToId[cryptoName] = cryptoId
+            }
+        }
+        self.saveDataToUserDefaults(orderBasedOnMarketCap: self.orderBasedOnMarketCap, mapOfCryptoNameToPrices: self.mapOfCryptoNameToPrices, mapOfCryptoNameToId: self.mapOfCryptoNameToId)
+
+        self.cryptocurrencies.removeAll()
+        self.cryptocurrenciesId.removeAll()
+
+        for name in self.orderBasedOnMarketCap {
+            if let price = self.mapOfCryptoNameToPrices[name],
+               let id = self.mapOfCryptoNameToId[name] {
+                self.cryptocurrencies.append([name, price])
+                self.cryptocurrenciesId.append([name, id])
+            }
+        }
     }
 
     func loadJson(_ urlString: String) {
@@ -460,7 +487,8 @@ class CryptoMarketTicker: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
-        let task = URLSession.shared.dataTask(with: request) {(data, response, error) in
+        let task = URLSession.shared.dataTask(with: request) { [weak self] (data, response, error) in
+            guard let self = self else { return }
             defer {
                 self.isLoading = false
             }
@@ -475,52 +503,54 @@ class CryptoMarketTicker: ObservableObject {
             }
             guard let json = try? JSONSerialization.jsonObject(with: content, options: []) else {
                 print("Error serializing JSON")
+                self.loadDataFromUserDefaults()
                 return
             }
             guard let jsonobj = json as? [[String:Any]] else {
                 let msg = "Failed converting to JSON object with: " + urlString
                 print(msg)
                 print(json)
-                self.isLoading = false
-                if self.retries < 5 {
-                    self.loadJson(self.urlBackup)
-                    self.retries += 1
-                }
+                self.loadDataFromUserDefaults()
                 return
             }
+            print("Request succeeded")
             DispatchQueue.main.async {
-                for i in 0..<jsonobj.count {
-                    let cryptoName = String(describing: jsonobj[i]["name"]!)
-                    let cryptoId = String(describing: jsonobj[i]["id"]!)
-                    let longPrice = String(describing: jsonobj[i]["current_price"]!)
-                    var currentPrice = longPrice
-                    if longPrice.count > 15 {
-                        let index = longPrice.index(longPrice.startIndex, offsetBy: 15)
-                        currentPrice = String(describing: longPrice[..<index])
-                    }
-                    if (cryptoName != "" && currentPrice != "") {
-                        if !self.poolOfExistingCrypto.contains(cryptoName) {
-                            self.orderBasedOnMarketCap.append(cryptoName)
-                            self.poolOfExistingCrypto.insert(cryptoName)
-                        }
-                        self.mapOfCryptoNameToPrices[cryptoName] = currentPrice
-                        self.mapOfCryptoNameToId[cryptoName] = cryptoId
-                    }
-                }
+                self.processJsonData(jsonobj)
+            }
+        }
+        task.resume()
+    }
 
-                self.cryptocurrencies.removeAll()
-                for i in 0..<self.orderBasedOnMarketCap.count {
-                    let name = self.orderBasedOnMarketCap[i]
-                    let price = self.mapOfCryptoNameToPrices[self.orderBasedOnMarketCap[i]]!
-                    let id = self.mapOfCryptoNameToId[self.orderBasedOnMarketCap[i]]!
+    private func saveDataToUserDefaults(orderBasedOnMarketCap: [String], mapOfCryptoNameToPrices : [String: String], mapOfCryptoNameToId: [String: String]) {
+        UserDefaults.standard.set(orderBasedOnMarketCap, forKey: self.orderBasedOnMarketCapKey)
+        UserDefaults.standard.set(mapOfCryptoNameToPrices, forKey: self.mapOfCryptoNameToPricesKey)
+        UserDefaults.standard.set(mapOfCryptoNameToId, forKey: self.mapOfCryptoNameToIdKey)
+    }
+
+    func loadDataFromUserDefaults() {
+//        UserDefaults.standard.removeObject(forKey: orderBasedOnMarketCapKey)
+//        UserDefaults.standard.removeObject(forKey: mapOfCryptoNameToPricesKey)
+//        UserDefaults.standard.removeObject(forKey: mapOfCryptoNameToIdKey)
+        if let savedOrder = UserDefaults.standard.array(forKey: orderBasedOnMarketCapKey) as? [String] {
+            self.orderBasedOnMarketCap = savedOrder
+        }
+        if let savedPrices = UserDefaults.standard.dictionary(forKey: mapOfCryptoNameToPricesKey) as? [String: String] {
+            self.mapOfCryptoNameToPrices = savedPrices
+        }
+        if let savedIds = UserDefaults.standard.dictionary(forKey: mapOfCryptoNameToIdKey) as? [String: String] {
+            self.mapOfCryptoNameToId = savedIds
+        }
+        self.cryptocurrencies.removeAll()
+        self.cryptocurrenciesId.removeAll()
+        DispatchQueue.main.async {
+            for name in self.orderBasedOnMarketCap {
+                if let price = self.mapOfCryptoNameToPrices[name],
+                    let id = self.mapOfCryptoNameToId[name] {
                     self.cryptocurrencies.append([name, price])
                     self.cryptocurrenciesId.append([name, id])
                 }
             }
-            self.retries = 0
-            self.isLoading = false
         }
-        task.resume()
     }
 }
 
@@ -611,9 +641,6 @@ struct RefreshableView: View {
 
     init(cryptocurrencies : CryptoMarketTicker) {
         self.cryptocurrencies = cryptocurrencies
-        self.cryptocurrencies.loadCrypto()
-        self.cachedCryptoArray = cryptocurrencies.cryptocurrencies
-        self.cachedCryptoIdArray = cryptocurrencies.cryptocurrenciesId
     }
 
     var body: some View {
@@ -646,8 +673,8 @@ struct RefreshableView: View {
                         .font(Font.custom(fontBold, size:15))
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                let cryptoArray = self.cachedCryptoArray
-                let cryptoIdArray = self.cachedCryptoIdArray
+                let cryptoArray = self.cryptocurrencies.cryptocurrencies
+                let cryptoIdArray = self.cryptocurrencies.cryptocurrenciesId
                 if cryptoArray.count > 1 {
                     ForEach(0 ..< cryptoArray.count, id: \.self) { i in
                         let crypto = cryptoArray[i][0]
