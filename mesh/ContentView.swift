@@ -522,6 +522,9 @@ class CryptoMarketTicker: ObservableObject {
     }
 
     private func saveDataToUserDefaults(orderBasedOnMarketCap: [String], mapOfCryptoNameToPrices : [String: String], mapOfCryptoNameToId: [String: String]) {
+        UserDefaults.standard.removeObject(forKey: orderBasedOnMarketCapKey)
+        UserDefaults.standard.removeObject(forKey: mapOfCryptoNameToPricesKey)
+        UserDefaults.standard.removeObject(forKey: mapOfCryptoNameToIdKey)
         UserDefaults.standard.set(orderBasedOnMarketCap, forKey: self.orderBasedOnMarketCapKey)
         UserDefaults.standard.set(mapOfCryptoNameToPrices, forKey: self.mapOfCryptoNameToPricesKey)
         UserDefaults.standard.set(mapOfCryptoNameToId, forKey: self.mapOfCryptoNameToIdKey)
