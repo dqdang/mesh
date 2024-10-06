@@ -738,6 +738,7 @@ struct RefreshableView: View {
                 }
             }
         }
+        .animation(.linear, value: isRefreshing)
         .background(GeometryReader {
             Color.clear.preference(key: ViewOffsetKey.self, value: -$0.frame(in: .global).origin.y)
         })
