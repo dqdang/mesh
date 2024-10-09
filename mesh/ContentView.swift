@@ -679,8 +679,8 @@ struct RefreshableView: View {
                     .font(Font.custom(fontBold, size:15))
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                let cryptoArray = self.cryptocurrencies.cryptocurrencies
-                let cryptoIdArray = self.cryptocurrencies.cryptocurrenciesId
+                var cryptoArray = self.cryptocurrencies.cryptocurrencies
+                var cryptoIdArray = self.cryptocurrencies.cryptocurrenciesId
                 if cryptoArray.count > 1 {
                     ForEach(0 ..< cryptoArray.count, id: \.self) { i in
                         let longCryptoName = cryptoArray[i][0]
