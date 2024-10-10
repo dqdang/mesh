@@ -16,20 +16,20 @@ import Vision
 struct ContentView: View {
     private let fontRegular = "JetBrainsMonoNL-Regular"
     private let fontBold = "JetBrainsMono-Bold"
-    @State private var sizeOfText: CGSize = .zero
-    @State private var fontSizeOfText: CGFloat = 20.0
+    private let sizeOfText: CGSize = .zero
+    private let fontSizeOfText: CGFloat = 20.0
     @State private var goPressed = false
     @State private var cryptoPressed = true
     @State private var aboutPressed = false
     @State private var drawingActivated = false
     @State private var showDrawingResult = false
     @State private var drawingResult = ""
-    @ObservedObject private var cryptocurrencies = CryptoMarketTicker()
+    @StateObject private var cryptocurrencies = CryptoMarketTicker()
     @State private var currentDrawing: Drawing = Drawing()
     @State private var drawings: [Drawing] = [Drawing]()
     @State private var rect1: CGRect = .zero
     @State var camera = PerspectiveCamera()
-    @State private var degrees = 271.1
+    private let degrees = 271.1
 
     init() {
     }
@@ -267,7 +267,7 @@ struct ContentView: View {
                                                     $0.animation = nil
                                                 }
                                                 .frame(height: UIScreen.screenHeight - 650, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:55)
-                                                Text("Copyright © 2022 Mesh Finance. All rights reserved.").font(Font.custom(fontRegular, size:7))
+                                                Text("Copyright © 2024 Mesh Finance. All rights reserved.").font(Font.custom(fontRegular, size:7))
                                                 .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:70)
                                                 .onLongPressGesture {
                                                     self.drawingActivated = true
@@ -429,28 +429,31 @@ struct EdgeBorder: Shape {
 
 class CryptoMarketTicker: ObservableObject {
     private var isLoading = false
-    @Published var cryptocurrencies: [[String]] = Array(repeating: Array(repeating: "", count: 2), count: 125)
-    @Published var cryptocurrenciesId: [[String]] = Array(repeating: Array(repeating: "", count: 2), count: 125)
-    private var mapOfCryptoNameToPrices : [String: String] = [:]
-    private var mapOfCryptoNameToId : [String: String] = [:]
-    private var orderBasedOnMarketCap : [String] = []
-    private var poolOfExistingCrypto : Set<String> = []
-    private let orderBasedOnMarketCapKey = "orderBasedOnMarketCap"
-    private let mapOfCryptoNameToPricesKey = "mapOfCryptoNameToPrices"
-    private let mapOfCryptoNameToIdKey = "mapOfCryptoNameToId"
+    private var useBackup = true
+    // [["Bitcoin", "1", "54923.0"], ["Ethereum", "2", "2381.32"], ...]
+    @Published var cryptocurrencies: [[String]] = Array(repeating: Array(repeating: "", count: 3), count: 125)
     private let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=125&page=1&sparkline=false"
     private let urlBackup = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc"
 
     init() {
         loadJson(self.url)
-        if self.cryptocurrencies.count < 1 {
+        if self.cryptocurrencies[0][0] == "" {
             loadDataFromUserDefaults()
         }
     }
 
     func refresh() async {
         print("Refreshing data...")
-        loadJson(self.url)
+        if self.useBackup == true {
+            print("Using urlBackup...")
+            loadJson(self.urlBackup)
+            self.useBackup = false
+        }
+        else {
+            print("Using url...")
+            loadJson(self.url)
+            self.useBackup = true
+        }
     }
 
     func loadJson(_ urlString: String) {
@@ -471,7 +474,6 @@ class CryptoMarketTicker: ObservableObject {
                 print("Error: \(error!)")
                 return
             }
-
             guard let content = data else {
                 print("No data")
                 return
@@ -491,7 +493,6 @@ class CryptoMarketTicker: ObservableObject {
             print("Request succeeded")
             DispatchQueue.main.async {
                 self.cryptocurrencies.removeAll()
-                self.cryptocurrenciesId.removeAll()
                 self.processJsonData(jsonobj)
             }
         }
@@ -499,65 +500,52 @@ class CryptoMarketTicker: ObservableObject {
     }
 
     private func processJsonData(_ jsonobj: [[String: Any]]) {
+        var localCryptoMap: [String: [String]] = [:]
         for item in jsonobj {
             guard let cryptoName = item["name"] as? String,
-            let cryptoId = item["id"] as? String,
-            let longPrice = item["current_price"] as? Double else { continue }
-            let longPriceString = String(longPrice)
+                  let cryptoId = item["id"] as? String,
+                  let longPrice = item["current_price"] as? Double,
+                  let marketCap = item["market_cap_rank"] as? Int
+            else {
+                print("Failed retrieving values")
+                continue
+            }
+            let longPriceString = String(longPrice).trimmingCharacters(in: .whitespaces)
             let currentPrice = longPriceString.count > 15 ? String(longPriceString.prefix(15)) : longPriceString
-            if !cryptoName.isEmpty && !currentPrice.isEmpty && !self.poolOfExistingCrypto.contains(cryptoName) {
-                self.orderBasedOnMarketCap.append(cryptoName)
-                self.poolOfExistingCrypto.insert(cryptoName)
-                self.mapOfCryptoNameToPrices[cryptoName] = currentPrice
-                self.mapOfCryptoNameToId[cryptoName] = cryptoId
-            }
+            let currentMarketCap = String(marketCap)
+            localCryptoMap[cryptoName] = [cryptoId, currentPrice, currentMarketCap]
         }
-        self.saveDataToUserDefaults(orderBasedOnMarketCap: self.orderBasedOnMarketCap,
-                                    mapOfCryptoNameToPrices: self.mapOfCryptoNameToPrices,
-                                    mapOfCryptoNameToId: self.mapOfCryptoNameToId)
-
+        let sortedCryptoArray = localCryptoMap.sorted {
+            let marketCap1 = Int($0.value[2])
+            let marketCap2 = Int($1.value[2])
+            return marketCap1! < marketCap2!
+        }
+        self.saveDataToUserDefaults(cryptoMap: localCryptoMap)
         var index = 0
-        for name in self.orderBasedOnMarketCap {
-            if let price = self.mapOfCryptoNameToPrices[name],
-               let id = self.mapOfCryptoNameToId[name] {
-                self.cryptocurrencies.insert([name, price], at: index)
-                self.cryptocurrenciesId.insert([name, id], at: index)
-                index += 1
-            }
+        for (cryptoName, details) in sortedCryptoArray {
+            self.cryptocurrencies.insert([cryptoName, details[0], details[1]], at: index)
+            index += 1
         }
     }
 
-    private func saveDataToUserDefaults(orderBasedOnMarketCap: [String], mapOfCryptoNameToPrices : [String: String], mapOfCryptoNameToId: [String: String]) {
-        UserDefaults.standard.removeObject(forKey: self.orderBasedOnMarketCapKey)
-        UserDefaults.standard.removeObject(forKey: self.mapOfCryptoNameToPricesKey)
-        UserDefaults.standard.removeObject(forKey: self.mapOfCryptoNameToIdKey)
-        UserDefaults.standard.set(orderBasedOnMarketCap, forKey: self.orderBasedOnMarketCapKey)
-        UserDefaults.standard.set(mapOfCryptoNameToPrices, forKey: self.mapOfCryptoNameToPricesKey)
-        UserDefaults.standard.set(mapOfCryptoNameToId, forKey: self.mapOfCryptoNameToIdKey)
+    private func saveDataToUserDefaults(cryptoMap: [String: [String]]) {
+        UserDefaults.standard.removeObject(forKey: "cryptoMap")
+        UserDefaults.standard.set(cryptoMap, forKey: "cryptoMap")
     }
 
     func loadDataFromUserDefaults() {
-//        UserDefaults.standard.removeObject(forKey: self.orderBasedOnMarketCapKey)
-//        UserDefaults.standard.removeObject(forKey: self.mapOfCryptoNameToPricesKey)
-//        UserDefaults.standard.removeObject(forKey: self.mapOfCryptoNameToIdKey)
-        if let savedOrder = UserDefaults.standard.array(forKey: orderBasedOnMarketCapKey) as? [String] {
-            self.orderBasedOnMarketCap = savedOrder
-        }
-        if let savedPrices = UserDefaults.standard.dictionary(forKey: mapOfCryptoNameToPricesKey) as? [String: String] {
-            self.mapOfCryptoNameToPrices = savedPrices
-        }
-        if let savedIds = UserDefaults.standard.dictionary(forKey: mapOfCryptoNameToIdKey) as? [String: String] {
-            self.mapOfCryptoNameToId = savedIds
-        }
-        DispatchQueue.main.async {
-            self.cryptocurrencies.removeAll()
-            self.cryptocurrenciesId.removeAll()
-            var index = 0
-            for name in self.orderBasedOnMarketCap {
-                if let price = self.mapOfCryptoNameToPrices[name],
-                    let id = self.mapOfCryptoNameToId[name] {
-                    self.cryptocurrencies.insert([name, price], at: index)
-                    self.cryptocurrenciesId.insert([name, id], at:index)
+//        UserDefaults.standard.removeObject(forKey: "cryptoMap")
+        if let savedMap = UserDefaults.standard.dictionary(forKey: "cryptoMap") as? [String: [String]] {
+            DispatchQueue.main.async {
+                self.cryptocurrencies.removeAll()
+                let sortedCryptoArray = savedMap.sorted {
+                    let marketCap1 = Int($0.value[2])
+                    let marketCap2 = Int($1.value[2])
+                    return marketCap1! < marketCap2!
+                }
+                var index = 0
+                for (cryptoName, details) in sortedCryptoArray {
+                    self.cryptocurrencies.insert([cryptoName, details[0], details[1]], at: index)
                     index += 1
                 }
             }
@@ -567,6 +555,7 @@ class CryptoMarketTicker: ObservableObject {
 
 class CryptoGraph: ObservableObject {
     private var isLoading = false
+    // [[20240106, 54281.3], [20240107, 61247.7], ...]
     @Published var prices: [[Any]] = []
     private var selectedCrypto = ""
     private var url = ""
@@ -616,8 +605,7 @@ class CryptoGraph: ObservableObject {
                 }
                 for i in 0..<all_prices.count {
                     let cur_price = all_prices[i] as! NSArray
-                    let time = cur_price[0] as! NSInteger
-                    let convertedTime = self.convertDate(dateValue: time)
+                    let convertedTime = self.convertDate(dateValue: cur_price[0] as! NSInteger)
                     let formatter = DateFormatter()
                     formatter.dateFormat = "yyyyMMdd"
                     let formattedDate = formatter.date(from: convertedTime) ?? Date.distantPast
@@ -635,9 +623,9 @@ struct RefreshableView: View {
     private let fontRegular = "JetBrainsMonoNL-Regular"
     private let fontBold = "JetBrainsMono-Bold"
     @State var camera = PerspectiveCamera()
-    @State private var degrees = 271.1
-    @State private var sizeOfText: CGSize = .zero
-    @State private var fontSizeOfText: CGFloat = 20.0
+    private let degrees = 271.1
+    private let sizeOfText: CGSize = .zero
+    private let fontSizeOfText: CGFloat = 20.0
     @State private var isRefreshing = false
     @State private var isRefreshable = true
     @State private var showPopup = false
@@ -679,14 +667,13 @@ struct RefreshableView: View {
                     .font(Font.custom(fontBold, size:15))
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                var cryptoArray = self.cryptocurrencies.cryptocurrencies
-                var cryptoIdArray = self.cryptocurrencies.cryptocurrenciesId
-                if cryptoArray.count > 1 {
+                let cryptoArray = self.cryptocurrencies.cryptocurrencies
+                if cryptoArray[0][0] != "" {
                     ForEach(0 ..< cryptoArray.count, id: \.self) { i in
-                        let longCryptoName = cryptoArray[i][0]
-                        let crypto = longCryptoName.count > 15 ? String(longCryptoName.prefix(15)).trimmingCharacters(in: .whitespaces) : longCryptoName.trimmingCharacters(in: .whitespaces)
-                        let price = cryptoArray[i][1].trimmingCharacters(in: .whitespaces)
-                        let id = cryptoIdArray[i][1].trimmingCharacters(in: .whitespaces)
+                        let longCryptoName = cryptoArray[i][0].trimmingCharacters(in: .whitespaces)
+                        let crypto = longCryptoName.count > 15 ? String(longCryptoName.prefix(15)) + "..." : longCryptoName
+                        let id = cryptoArray[i][1]
+                        let price = cryptoArray[i][2]
                         HStack {
                             Button(action: {
                                 self.selectedName = "\(longCryptoName)"
@@ -732,7 +719,7 @@ struct RefreshableView: View {
                             $0.animation = nil
                         }
                         .frame(width: UIScreen.screenWidth, height: UIScreen.screenHeight / 2 - 180, alignment: .center).position(x: UIScreen.screenWidth / 2 - 49, y:145)
-                        Text("Copyright © 2022 Mesh Finance. All rights reserved.").font(Font.custom(fontRegular, size:7))
+                        Text("Copyright © 2024 Mesh Finance. All rights reserved.").font(Font.custom(fontRegular, size:7))
                             .frame(height: fontSizeOfText, alignment: .center).background(.white).position(x: UIScreen.screenWidth / 2 - 45, y:70)
                     }
                 }
@@ -799,6 +786,7 @@ struct GraphView: View {
 struct ViewOffsetKey: PreferenceKey {
     typealias Value = CGFloat
     static var defaultValue = CGFloat.zero
+
     static func reduce(value: inout Value, nextValue: () -> Value) {
         value += nextValue()
     }
@@ -811,6 +799,7 @@ struct Drawing {
 struct DrawingPad : View {
     @Binding var currentDrawing: Drawing
     @Binding var drawings: [Drawing]
+
     var body: some View {
         GeometryReader { geometry in
             Path { path in
@@ -832,10 +821,12 @@ struct DrawingPad : View {
                         self.currentDrawing.points.append(currentPoint)
                     }
                 })
-                .onEnded({ (value) in
-                    self.drawings.append(self.currentDrawing)
-                    self.currentDrawing = Drawing()
-                })
+                .onEnded(
+                    { (value) in
+                        self.drawings.append(self.currentDrawing)
+                        self.currentDrawing = Drawing()
+                    }
+                )
             )
         }
         .frame(width: UIScreen.screenWidth - 90, height: UIScreen.screenHeight - 437, alignment: .center)
@@ -844,7 +835,7 @@ struct DrawingPad : View {
     private func add(drawing: Drawing, toPath path: inout Path) {
         let points = drawing.points
         if points.count > 1 {
-            for i in 0..<points.count-1 {
+            for i in 0 ..< points.count-1 {
                 let current = points[i]
                 let next = points[i+1]
                 path.move(to: current)
@@ -856,7 +847,7 @@ struct DrawingPad : View {
 
 struct RectGetter: View {
     @Binding var rect: CGRect
-    
+
     var body: some View {
         GeometryReader { proxy in
             self.createView(proxy: proxy)
